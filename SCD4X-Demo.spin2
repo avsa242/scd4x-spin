@@ -1,8 +1,8 @@
 {
     --------------------------------------------
-    Filename: SCD4X-Demo.spin
+    Filename: SCD4X-Demo.spin2
     Author: Jesse Burt
-    Description: SCD4X driver demo
+    Description: SCD4X driver demo (P2 version)
         * CO2 data output
     Copyright (c) 2022
     Started Jul 10, 2021
@@ -11,49 +11,48 @@
     --------------------------------------------
 
     Build-time symbols supported by driver:
-        -DSCD4X_I2C (default if none specified)
-        -DSCD4X_I2C_BC
+        N/A
 }
 CON
 
-    _clkmode    = cfg#_clkmode
-    _xinfreq    = cfg#_xinfreq
+    _clkfreq    = cfg._clkfreq_def
+    _xtlfreq    = cfg._xtlfreq
 
 ' -- User-modifiable constants
-    SER_BAUD    = 115_200
+    SER_BAUD    = 2_000_000
 
     { I2C configuration }
-    SCL_PIN     = 28
-    SDA_PIN     = 29
+    SCL_PIN     = 0
+    SDA_PIN     = 1
     I2C_FREQ    = 100_000                       ' max is 100_000
+                                                ' (Sensirion recommends 50_000)
 
 ' --
 
 OBJ
 
-    cfg: "core.con.boardcfg.flip"
+    cfg: "core.con.boardcfg.p2eval"
     env: "sensor.co2.scd4x"
     ser: "com.serial.terminal.ansi"
-    time: "time"
 
-PUB Setup{}
+PUB Setup()
 
     ser.start(SER_BAUD)
-    time.msleep(10)
-    ser.clear{}
-    ser.strln(string("Serial terminal started"))
+    waitms(10)
+    ser.clear()
+    ser.strln(@"Serial terminal started")
 
     if (env.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
-        ser.strln(string("SCD4X driver started"))
+        ser.strln(@"SCD4X driver started")
     else
-        ser.strln(string("SCD4X driver failed to start - halting"))
+        ser.strln(@"SCD4X driver failed to start - halting")
         repeat
 
-    env.reset{}
-    env.opmode(env#CONT)
-    demo{}
+    env.reset()
+    env.opmode(env.CONT)
+    demo()
 
-#include "co2demo.common.spinh"                 ' code common to all CO2 demos
+#include "co2demo.common.spin2h"                ' code common to all IMU demos
 
 DAT
 {
