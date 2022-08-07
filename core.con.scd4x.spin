@@ -48,6 +48,7 @@ CON
     T_REINIT        = 20_000                    ' cmd execution time: reinit
 
     MEAS_ONE        = $219D
+    T_MEAS          = 5_000
     MEAS_ONE_RHT    = $2196
     PWR_DN          = $36E0
     WAKE            = $36F6

@@ -116,9 +116,13 @@ PUB opmode(mode): curr_mode
 ' Set operating mode
 '   Valid values:
 '   Any other value returns the current setting
-    if (mode == CONT)
-        _opmode := CONT
-        writereg(core#START_MEAS, 0, 0)
+    case mode
+        CONT:
+            _opmode := CONT
+            writereg(core#START_MEAS, 0, 0)
+        STANDBY:
+            writereg(core#STOP_MEAS, 0, 0)
+            _opmode := STANDBY
 
 PUB reset{}
 ' Reset the device
@@ -206,12 +210,14 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, dat_tmp
     cmd_pkt.byte[1] := reg_nr.byte[1]
     cmd_pkt.byte[2] := reg_nr.byte[0]
     case reg_nr
-        core#START_MEAS, core#MEAS_ONE, core#REINIT:
+        core#START_MEAS, core#MEAS_ONE, core#STOP_MEAS, core#REINIT:
             i2c.start{}
             i2c.wrblock_lsbf(@cmd_pkt, 3)
             i2c.stop{}
             if (reg_nr == core#REINIT)
                 time.usleep(core#T_REINIT)
+            if (reg_nr == core#MEAS_ONE)
+                time.usleep(core#T_MEAS)
         other:
             return
 
