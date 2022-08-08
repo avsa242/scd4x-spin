@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor (P2 version)
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 7, 2022
+    Updated Aug 8, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -73,6 +73,18 @@ PUB defaults()
 PUB adc2co2(adc_word): co2
 ' Convert ADC word to CO2 concentration, in PPM
     return adc_word * 10
+
+PUB alt_comp(alt): curr_alt
+' Compensate CO2 measurements based on altitude, in meters
+'   Valid values: 0..65535
+'   Any other value polls the chip and returns the current setting
+    case alt
+        0..65535:
+            writereg(core#SET_SENS_ALT, 3, @alt)
+        other:
+            curr_alt := 0
+            readreg(core#GET_SENS_ALT, 3, @curr_alt)
+            return curr_alt
 
 PUB co2_data(): f_co2
 ' CO2 data
@@ -176,6 +188,23 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, tmp, i
                     word[ptr_buff][i] := tmp
             i2c.stop()
             return
+        core#GET_SENS_ALT:
+            cmd_pkt.byte[0] := SLAVE_WR
+            cmd_pkt.byte[1] := reg_nr.byte[1]
+            cmd_pkt.byte[2] := reg_nr.byte[0]
+            i2c.start{}
+            i2c.wrblock_lsbf(@cmd_pkt, 3)
+            i2c.stop{}
+            waitus(core#T_GET_DRDY)
+            i2c.start{}
+            i2c.wr_byte(SLAVE_RD)
+            tmp := i2c.rdword_msbf(i2c#ACK)
+            crc_rd := i2c.rd_byte(i2c#NAK)
+            i2c.stop{}
+            crc_calc := crc.sensirioncrc8(@tmp, 2)
+            if (crc_rd == crc_calc)
+                word[ptr_buff] := tmp
+            return
         core.GET_DRDY:
             cmd_pkt.byte[0] := SLAVE_WR
             cmd_pkt.byte[1] := reg_nr.byte[1]
@@ -197,7 +226,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, tmp, i
         other:                                  ' invalid reg_nr
             return
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, dat_tmp
+PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc
 ' Write nr_bytes to the device from ptr_buff
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr.byte[1]
@@ -210,7 +239,19 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, dat_tmp
             if (reg_nr == core.REINIT)
                 waitus(core.T_REINIT)
             if (reg_nr == core#MEAS_ONE)
-                waitus(core#T_MEAS)
+                waitus(core.T_MEAS)
+            if (reg_nr == core#STOP_MEAS)
+                waitus(core#T_STOP_MEAS)
+        core#SET_SENS_ALT:
+            i2c.start{}
+            i2c.wrblock_lsbf(@cmd_pkt, 3)
+            tmp.byte[1] := byte[ptr_buff][1]
+            tmp.byte[0] := byte[ptr_buff][0]
+            crc_calc := crc.sensirioncrc8(@tmp, 2)
+            i2c.wrword_msbf(tmp)
+            i2c.wr_byte(crc_calc)
+            i2c.stop{}
+            waitus(1000)
         other:
             return
 

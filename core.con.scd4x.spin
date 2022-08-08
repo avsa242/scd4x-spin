@@ -5,7 +5,7 @@
     Description: SCD4x-specific constants
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 7, 2022
+    Updated Aug 8, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -25,6 +25,7 @@ CON
     START_MEAS      = $21B1
     READ_MEAS       = $EC05
     STOP_MEAS       = $3F86
+    T_STOP_MEAS     = 500_000
 
     SET_TEMP_OFFS   = $241D
     GET_TEMP_OFFS   = $2318

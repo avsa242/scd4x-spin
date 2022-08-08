@@ -11,6 +11,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 * I2C connection at up to 100kHz
 * Read serial number
 * Read CO2 concentration, temperature, RH
+* Set compensation for local altitude above sea level
 
 ## Requirements
 

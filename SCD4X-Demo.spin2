@@ -6,7 +6,7 @@
         * CO2 data output
     Copyright (c) 2022
     Started Jul 10, 2021
-    Updated Aug 6, 2022
+    Updated Aug 8, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -49,6 +49,8 @@ PUB Setup()
         repeat
 
     env.reset()
+    env.opmode(env.STANDBY)
+    env.alt_comp(0)                             ' your location's altitude above sea level (m)
     env.opmode(env.CONT)
     demo()
 
