@@ -36,6 +36,7 @@ VAR
     long _co2
     long _temp
     long _rh
+    long _presscomp
     byte _opmode
 
 OBJ
@@ -85,6 +86,8 @@ PUB alt_comp(alt): curr_alt
 ' Compensate CO2 measurements based on altitude, in meters
 '   Valid values: 0..65535
 '   Any other value polls the chip and returns the current setting
+'   NOTE: The sensor must not be actively measuring for this setting to take effect
+'       Call opmode(STANDBY) first
     case alt
         0..65535:
             writereg(core#SET_SENS_ALT, 3, @alt)
@@ -92,6 +95,19 @@ PUB alt_comp(alt): curr_alt
             curr_alt := 0
             readreg(core#GET_SENS_ALT, 3, @curr_alt)
             return curr_alt
+
+PUB amb_pressure(press): curr_press
+' Set ambient pressure, in millibars, for use in on-sensor compensation
+'   Valid values:
+'       0: disable compensation
+'       700..1400 (* range unverified)
+'   Any other value returns the current setting
+    case press
+        0, 700..1400:
+            writereg(core#SET_AMB_PRESS, 2, @press)
+            _presscomp := press
+        other:
+            return _presscomp
 
 PUB co2_data{}: f_co2
 ' CO2 data

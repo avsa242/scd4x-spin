@@ -11,7 +11,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 * I2C connection at up to 100kHz
 * Read serial number
 * Read CO2 concentration, temperature, RH
-* Set compensation for local altitude above sea level
+* Set compensation for local altitude above sea level, or ambient pressure
 
 ## Requirements
 
@@ -44,4 +44,4 @@ P2/SPIN2:
 ## Limitations
 
 * Very early in development - may malfunction, or outright fail to build
-
+* Range of allowed values for ambient pressure compensation isn't verified (not available in datasheet), so it was copied from the SCD30
