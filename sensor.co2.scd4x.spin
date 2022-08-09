@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 8, 2022
+    Updated Aug 9, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -105,7 +105,8 @@ PUB data_ready{}: flag
 ' Flag indicating measurement data is ready
 '   Returns: TRUE (-1) or FALSE (0)
     flag := 0
-    readreg(core#GET_DRDY, 1, @flag)
+    readreg(core#GET_DRDY, 2, @flag)
+    return ((flag & $7ff) <> 0)                 ' lower 11 bits set? data is ready
 
 PUB rhdata{}: rh_adc
 ' Relative humidity data
@@ -174,64 +175,34 @@ PRI read_meas{} | tmp[2]
     _temp := ~~tmp.word[1]
     _rh := tmp.word[2]
 
-PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, tmp, i
+PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr, last_wd, dly
 ' Read nr_bytes from the device into ptr_buff
     case reg_nr                                 ' validate register num
-        core#GET_SN, core#READ_MEAS:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr.byte[1]
-            cmd_pkt.byte[2] := reg_nr.byte[0]
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 3)
-            i2c.stop
-            time.usleep(1000)
-            i2c.start{}
-            i2c.wr_byte(SLAVE_RD)
-            repeat i from 0 to 2
-                tmp := i2c.rdword_msbf(i2c#ACK)
-                crc_rd := i2c.rd_byte(i == 2)
-                crc_calc := crc.sensirioncrc8(@tmp, 2)
-                if (crc_rd == crc_calc)
-                    word[ptr_buff][i] := tmp
-            i2c.stop{}
-            return
-        core#GET_SENS_ALT:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr.byte[1]
-            cmd_pkt.byte[2] := reg_nr.byte[0]
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 3)
-            i2c.stop{}
-            time.usleep(core#T_GET_DRDY)
-            i2c.start{}
-            i2c.wr_byte(SLAVE_RD)
-            tmp := i2c.rdword_msbf(i2c#ACK)
-            crc_rd := i2c.rd_byte(i2c#NAK)
-            i2c.stop{}
-            crc_calc := crc.sensirioncrc8(@tmp, 2)
-            if (crc_rd == crc_calc)
-                word[ptr_buff] := tmp
-            return
+        core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT:
+            dly := core#T_CMD
         core#GET_DRDY:
-            cmd_pkt.byte[0] := SLAVE_WR
-            cmd_pkt.byte[1] := reg_nr.byte[1]
-            cmd_pkt.byte[2] := reg_nr.byte[0]
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 3)
-            i2c.stop{}
-            time.usleep(core#T_GET_DRDY)
-            i2c.start{}
-            i2c.wr_byte(SLAVE_RD)
-            tmp := i2c.rdword_msbf(i2c#ACK)
-            crc_rd := i2c.rd_byte(i2c#NAK)
-            i2c.stop{}
-            crc_calc := crc.sensirioncrc8(@tmp, 2)
-            if (crc_rd == crc_calc)
-                if (tmp & $7ff)                 ' lower 11 bits set? data is ready
-                    long[ptr_buff][0] := true
-            return
+            dly := core#T_GET_DRDY
         other:                                  ' invalid reg_nr
             return
+    if (nr_bytes < 2)
+        return
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := reg_nr.byte[1]
+    cmd_pkt.byte[2] := reg_nr.byte[0]
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 3)
+    i2c.stop
+    time.usleep(dly)
+    i2c.start{}
+    i2c.wr_byte(SLAVE_RD)
+    last_wd := (nr_bytes / 2)-1                 ' bytes to words
+    repeat wd_nr from 0 to last_wd
+        rdw := i2c.rdword_msbf(i2c#ACK)
+        crc_rd := i2c.rd_byte(wd_nr == last_wd) ' NAK if this is the last word to be read
+        crc_calc := crc.sensirioncrc8(@rdw, 2)
+        if (crc_rd == crc_calc)                 ' copy data to caller if CRC is good
+            word[ptr_buff][wd_nr] := rdw
+    i2c.stop{}
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc
 ' Write nr_bytes to the device from ptr_buff

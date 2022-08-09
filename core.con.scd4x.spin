@@ -5,7 +5,7 @@
     Description: SCD4x-specific constants
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 8, 2022
+    Updated Aug 9, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -17,6 +17,7 @@ CON
     SLAVE_ADDR      = $62 << 1                  ' 7-bit format slave address
     T_POR           = 1_000_000                 ' startup time (usecs)
     T_RES           = 1_000_000                 ' reset time
+    T_CMD           = 1_000                     ' most commands
 
     DEVID_RESP      = $00                       ' device ID expected response
 
