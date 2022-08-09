@@ -123,7 +123,7 @@ PUB rhword2pct(adc_word): rh
 PUB measure{}
 ' Read measurement data
     if (_opmode <> CONT)
-        writereg(core#MEAS_ONE, 0, 0)
+        command(core#MEAS_ONE)
 
 PUB opmode(mode): curr_mode
 ' Set operating mode
@@ -132,14 +132,14 @@ PUB opmode(mode): curr_mode
     case mode
         CONT:
             _opmode := CONT
-            writereg(core#START_MEAS, 0, 0)
+            command(core#START_MEAS)
         STANDBY:
-            writereg(core#STOP_MEAS, 0, 0)
+            command(core#STOP_MEAS)
             _opmode := STANDBY
 
 PUB reset{}
 ' Reset the device
-    writereg(core#REINIT, 0, 0)
+    command(core#REINIT)
 
 PUB serial_num(ptr_buff)
 ' Read the 48-bit serial number of the device into ptr_buff
@@ -166,6 +166,26 @@ PUB tempword2deg(adc_word): temp
         other:
             return FALSE
 
+PRI command(cmd) | cmd_pkt, dly
+' Issue command to the device
+    case cmd
+        core#START_MEAS:
+            dly := 0
+        core#MEAS_ONE:
+            dly := core#T_MEAS
+        core#STOP_MEAS:
+            dly := core#T_STOP_MEAS
+        core#REINIT:
+            dly := core#T_REINIT
+
+    cmd_pkt.byte[0] := SLAVE_WR
+    cmd_pkt.byte[1] := cmd.byte[1]
+    cmd_pkt.byte[2] := cmd.byte[0]
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 3)
+    i2c.stop{}
+    time.usleep(dly)
+
 PRI read_meas{} | tmp[2]
 ' Read measurements and cache in RAM
 '   NOTE: Valid data will be returned only if the data_ready() signal is TRUE
@@ -184,8 +204,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
             dly := core#T_GET_DRDY
         other:                                  ' invalid reg_nr
             return
-    if (nr_bytes < 2)
-        return
+
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr.byte[1]
     cmd_pkt.byte[2] := reg_nr.byte[0]
@@ -204,34 +223,27 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
             word[ptr_buff][wd_nr] := rdw
     i2c.stop{}
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc
+PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 ' Write nr_bytes to the device from ptr_buff
+    case reg_nr
+        core#SET_SENS_ALT:
+            dly := core#T_CMD
+        other:
+            return
+
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := reg_nr.byte[1]
     cmd_pkt.byte[2] := reg_nr.byte[0]
-    case reg_nr
-        core#START_MEAS, core#MEAS_ONE, core#STOP_MEAS, core#REINIT:
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 3)
-            i2c.stop{}
-            if (reg_nr == core#REINIT)
-                time.usleep(core#T_REINIT)
-            if (reg_nr == core#MEAS_ONE)
-                time.usleep(core#T_MEAS)
-            if (reg_nr == core#STOP_MEAS)
-                time.usleep(core#T_STOP_MEAS)
-        core#SET_SENS_ALT:
-            i2c.start{}
-            i2c.wrblock_lsbf(@cmd_pkt, 3)
-            tmp.byte[1] := byte[ptr_buff][1]
-            tmp.byte[0] := byte[ptr_buff][0]
-            crc_calc := crc.sensirioncrc8(@tmp, 2)
-            i2c.wrword_msbf(tmp)
-            i2c.wr_byte(crc_calc)
-            i2c.stop{}
-            time.usleep(1000)
-        other:
-            return
+
+    i2c.start{}
+    i2c.wrblock_lsbf(@cmd_pkt, 3)
+    tmp.byte[1] := byte[ptr_buff][1]
+    tmp.byte[0] := byte[ptr_buff][0]
+    crc_calc := crc.sensirioncrc8(@tmp, 2)
+    i2c.wrword_msbf(tmp)
+    i2c.wr_byte(crc_calc)
+    i2c.stop{}
+    time.usleep(dly)
 
 DAT
 {
