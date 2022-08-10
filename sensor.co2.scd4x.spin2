@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor (P2 version)
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 9, 2022
+    Updated Aug 10, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -101,6 +101,30 @@ PUB amb_pressure(press): curr_press
             _presscomp := press
         other:
             return _presscomp
+
+PUB cal_co2(ref_ppm): ppm | crc_rd
+' Perform manual CO2 sensor calibration, given target CO2 concentration in ppm
+'   NOTE: To successfully perform accurate calibration, follow these steps:
+'       1. Operate the sensor in the end-application's desired opmode() for at least 3 minutes
+'           in an environment with a uniform and constant CO2 concentration
+'       2. Set opmode() to STANDBY
+'       3. Call this method (optionally read return value)
+'   Returns:
+'       magnitude of correction, in ppm (for informational purposes only; no action
+'           is required with this value)
+'       $ffff if failed
+    if (lookdown(ref_ppm: 0..65535))
+        writereg(core.RE_CAL, 2, @ref_ppm)
+    else
+        return
+
+    i2c.start()
+    i2c.write(SLAVE_RD)
+    ppm := (i2c.rdword_msbf(i2c.ACK)-$8000)
+    crc_rd := i2c.rd_byte(i2c.NAK)
+    i2c.stop()
+    if (crc_rd == crc.sensirioncrc8(@ppm, 2))
+        return ppm
 
 PUB co2_data(): f_co2
 ' CO2 data
@@ -237,6 +261,8 @@ PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
     case reg_nr
         core.SET_SENS_ALT:
             dly := core.T_CMD
+        core#RE_CAL:
+            dly := core#T_RECAL
         other:
             return
 

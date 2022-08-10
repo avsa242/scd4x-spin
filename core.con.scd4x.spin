@@ -5,7 +5,7 @@
     Description: SCD4x-specific constants
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 9, 2022
+    Updated Aug 10, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -35,6 +35,7 @@ CON
     SET_AMB_PRESS   = $E000
 
     RE_CAL          = $362F
+    T_RECAL         = 400_000
     SET_AUTOCAL     = $2416
     GET_AUTOCAL     = $2313
 
