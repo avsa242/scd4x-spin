@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 10, 2022
+    Updated Aug 11, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -188,6 +188,20 @@ PUB serial_num(ptr_buff)
 '   NOTE: Serial number can only be read when no measurements are active
     readreg(core#GET_SN, 6, ptr_buff)
 
+PUB temp_bias(tb): curr_bias
+' Set temperature sensor bias/offset
+'   Valid values: -10_00 .. 60_00 (-10C..60C, range unverified by datasheet)
+'   Any other value returns the current setting
+    case tb
+        -10_00..60_00:
+            tb := (tb * core#ADC_MAX) / 175_00
+            writereg(core#SET_TEMP_OFFS, 2, @tb)
+        other:
+            curr_bias := 0
+            readreg(core#GET_TEMP_OFFS, 2, @curr_bias)
+            return (175 * (curr_bias * 100)) / core#ADC_MAX
+            return
+
 PUB tempdata{}: temp_adc
 ' Temperature data
 '   Returns: temperature ADC word
@@ -238,7 +252,7 @@ PRI read_meas{} | tmp[2]
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr, last_wd, dly
 ' Read nr_bytes from the device into ptr_buff
     case reg_nr                                 ' validate register num
-        core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT:
+        core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT, core#GET_TEMP_OFFS:
             dly := core#T_CMD
         core#GET_DRDY:
             dly := core#T_GET_DRDY
@@ -266,7 +280,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
-        core#SET_SENS_ALT:
+        core#SET_SENS_ALT, core#SET_TEMP_OFFS:
             dly := core#T_CMD
         core#RE_CAL:
             dly := core#T_RECAL
