@@ -16,6 +16,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 * Set temperature bias/offset
 * Continuous (SCD40, SCD41), continuous low-power (SCD40, SCD41)
 or single-shot (SCD41 only) measurement modes
+* Power down sensor (SCD41 only)
 
 ## Requirements
 

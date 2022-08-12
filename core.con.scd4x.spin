@@ -57,7 +57,7 @@ CON
     MEAS_ONE_RHT    = $2196
     PWR_DN          = $36E0
     WAKE            = $36F6
-
+    T_WAKE          = 20_000                    ' cmd execution time: wake up
 
 PUB null{}
 ' This is not a top-level object
