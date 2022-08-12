@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 11, 2022
+    Updated Aug 12, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -108,6 +108,20 @@ PUB amb_pressure(press): curr_press
             _presscomp := press
         other:
             return _presscomp
+
+PUB auto_cal(state): curr_state
+' Enable automatic self-calibration
+'   Valid values: TRUE (-1 or 1), *FALSE (0)
+'   Any other value polls the chip and returns the current setting
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
+    case ||(state)
+        0, 1:
+            state := ||(state)
+            writereg(core#SET_AUTOCAL, 2, @state)
+        other:
+            curr_state := 0
+            readreg(core#GET_AUTOCAL, 2, @curr_state)
+            return (curr_state == 1)
 
 PUB cal_co2(ref_ppm): ppm | crc_rd
 ' Perform manual CO2 sensor calibration, given target CO2 concentration in ppm
@@ -252,7 +266,7 @@ PRI read_meas{} | tmp[2]
 PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr, last_wd, dly
 ' Read nr_bytes from the device into ptr_buff
     case reg_nr                                 ' validate register num
-        core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT, core#GET_TEMP_OFFS:
+        core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT, core#GET_TEMP_OFFS, core#GET_AUTOCAL:
             dly := core#T_CMD
         core#GET_DRDY:
             dly := core#T_GET_DRDY
@@ -280,7 +294,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
-        core#SET_SENS_ALT, core#SET_TEMP_OFFS:
+        core#SET_SENS_ALT, core#SET_TEMP_OFFS, core#SET_AUTOCAL:
             dly := core#T_CMD
         core#RE_CAL:
             dly := core#T_RECAL

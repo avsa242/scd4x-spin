@@ -12,7 +12,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 * Read serial number
 * Read CO2 concentration, temperature, RH
 * Set compensation for local altitude above sea level, or ambient pressure
-* Manual CO2 calibration
+* Automatic or manual CO2 calibration
 * Set temperature bias/offset
 
 ## Requirements
