@@ -77,7 +77,9 @@ PUB stop{}
 
 PUB defaults{}
 ' Set factory defaults
-    reset{}
+'   * Reset all configuration settings stored in sensor EEPROM
+'   * Erase manual and/or automatic calibration history
+    command(core#FACT_RESET)
 
 PUB adc2co2(adc_word): co2
 ' Convert ADC word to CO2 concentration, in PPM
@@ -250,6 +252,8 @@ PRI command(cmd) | cmd_pkt, dly
             dly := core#T_STOP_MEAS
         core#REINIT:
             dly := core#T_REINIT
+        core#FACT_RESET:
+            dly := core#T_FACT_RESET
 
     cmd_pkt.byte[0] := SLAVE_WR
     cmd_pkt.byte[1] := cmd.byte[1]

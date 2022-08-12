@@ -5,7 +5,7 @@
     Description: SCD4x-specific constants
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 10, 2022
+    Updated Aug 12, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -47,6 +47,8 @@ CON
     GET_SN          = $3682
     SELF_TEST       = $3639
     FACT_RESET      = $3632
+    T_FACT_RESET    = 1_200_000                 ' cmd execution time: factory reset
+
     REINIT          = $3646
     T_REINIT        = 20_000                    ' cmd execution time: reinit
 
