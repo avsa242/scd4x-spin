@@ -24,6 +24,7 @@ CON
 ' Operating modes
     STANDBY         = 0
     CONT            = 1
+    CONT_LP         = 2
 
 ' Temperature scales
     C               = 0
@@ -169,7 +170,8 @@ PUB rhword2pct(adc_word): rh
 
 PUB measure()
 ' Read measurement data
-    if (_opmode <> CONT)
+'   NOTE: This only functions with the SCD41
+    if (_opmode == STANDBY)
         command(core.MEAS_ONE)
 
 PUB opmode(mode): curr_mode
@@ -177,12 +179,14 @@ PUB opmode(mode): curr_mode
 '   Valid values:
 '   Any other value returns the current setting
     case mode
-        CONT:
-            _opmode := CONT
+        CONT:                                   ' continuous/periodic measurements
             command(core.START_MEAS)
-        STANDBY:
-            command(core.STOP_MEAS)
-            _opmode := STANDBY
+        CONT_LP:                                ' same, but low-power
+            command(core.START_LP_MEAS)
+        STANDBY:                                ' standby/idle
+            command(core.STOP_MEAS)             '   (also enables single-shot meas. for SCD41)
+
+    _opmode := mode
 
 PUB reset()
 ' Reset the device
@@ -199,6 +203,7 @@ PUB temp_bias(tb): curr_bias
 ' Set temperature sensor bias/offset
 '   Valid values: -10_00 .. 60_00 (-10C..60C, range unverified by datasheet)
 '   Any other value returns the current setting
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
     case tb
         -10_00..60_00:
             tb := (tb * core.ADC_MAX) / 175_00
@@ -230,7 +235,7 @@ PUB tempword2deg(adc_word): temp
 PRI command(cmd) | cmd_pkt, dly
 ' Issue command to the device
     case cmd
-        core.START_MEAS:
+        core.START_MEAS, core.START_LP_MEAS:
             dly := 0
         core.MEAS_ONE:
             dly := core.T_MEAS
