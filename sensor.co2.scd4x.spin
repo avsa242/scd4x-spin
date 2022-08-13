@@ -354,7 +354,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
-        core#SET_SENS_ALT, core#SET_TEMP_OFFS, core#SET_AUTOCAL:
+        core#SET_SENS_ALT, core#SET_TEMP_OFFS, core#SET_AUTOCAL, core#SET_AMB_PRESS:
             dly := core#T_CMD
         core#RE_CAL:
             dly := core#T_RECAL
