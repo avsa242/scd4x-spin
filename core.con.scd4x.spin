@@ -17,29 +17,38 @@ CON
     SLAVE_ADDR      = $62 << 1                  ' 7-bit format slave address
     T_POR           = 1_000_000                 ' startup time (usecs)
     T_RES           = 1_000_000                 ' reset time
-    T_CMD           = 1_000                     ' most commands
+    T_CMD           = 1_000                     ' cmd execution time: most commands
 
     DEVID_RESP      = $00                       ' device ID expected response
 
     ADC_MAX         = $FFFF                     ' sensor ADC full-scale reading
 
     START_MEAS      = $21B1
+
     READ_MEAS       = $EC05
+
     STOP_MEAS       = $3F86
-    T_STOP_MEAS     = 500_000
+    T_STOP_MEAS     = 500_000                   ' cmd execution time: stop measurement
 
     SET_TEMP_OFFS   = $241D
+
     GET_TEMP_OFFS   = $2318
+
     SET_SENS_ALT    = $2427
+
     GET_SENS_ALT    = $2322
+
     SET_AMB_PRESS   = $E000
 
     RE_CAL          = $362F
-    T_RECAL         = 400_000
+    T_RECAL         = 400_000                   ' cmd execution time: forced re-calibration
+
     SET_AUTOCAL     = $2416
+
     GET_AUTOCAL     = $2313
 
     START_LP_MEAS   = $21AC
+
     GET_DRDY        = $E4B8
     T_GET_DRDY      = 1_000                     ' cmd execution time: data ready
 
@@ -47,7 +56,10 @@ CON
     T_PERSIST_SET   = 800_000                   ' cmd execution time: write persistent settings
 
     GET_SN          = $3682
+
     SELF_TEST       = $3639
+    T_SELF_TEST     = 10_000_000                ' cmd execution time: self-test
+
     FACT_RESET      = $3632
     T_FACT_RESET    = 1_200_000                 ' cmd execution time: factory reset
 
@@ -55,9 +67,13 @@ CON
     T_REINIT        = 20_000                    ' cmd execution time: reinit
 
     MEAS_ONE        = $219D
-    T_MEAS          = 5_000
+    T_MEAS_ONE      = 5_000_000                 ' cmd execution time: one-shot measurement
+
     MEAS_ONE_RHT    = $2196
+    T_MEAS_ONE_RHT  = 50_000                    ' cmd execution time: one-shot meas (RH/T only)
+
     PWR_DN          = $36E0
+
     WAKE            = $36F6
     T_WAKE          = 20_000                    ' cmd execution time: wake up
 

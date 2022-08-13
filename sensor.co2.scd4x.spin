@@ -224,6 +224,15 @@ PUB save_settings{}
 ' Save configuration settings to sensor EEPROM
     command(core#PERSIST_SET)
 
+PUB self_test{}: status
+' Perform sensor self-test
+'   Returns:
+'       0: no malfunction detected
+'       non-zero: malfunction detected
+'   NOTE: This method takes approx 10sec to execute
+    status := 0
+    readreg(core#SELF_TEST, 2, @status)
+
 PUB serial_num(ptr_buff)
 ' Read the 48-bit serial number of the device into ptr_buff
 '   Format: MSW..MW..LSW [47..32][31..16][15..0]
@@ -270,7 +279,9 @@ PRI command(cmd) | cmd_pkt, dly
         core#START_MEAS, core#START_LP_MEAS:
             dly := 0
         core#MEAS_ONE:
-            dly := core#T_MEAS
+            dly := core#T_MEAS_ONE
+        core#MEAS_ONE_RHT:
+            dly := core#T_MEAS_ONE_RHT
         core#STOP_MEAS:
             dly := core#T_STOP_MEAS
         core#REINIT:
@@ -306,6 +317,8 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
     case reg_nr                                 ' validate register num
         core#GET_SN, core#READ_MEAS, core#GET_SENS_ALT, core#GET_TEMP_OFFS, core#GET_AUTOCAL:
             dly := core#T_CMD
+        core#SELF_TEST:
+            dly := core#T_SELF_TEST
         core#GET_DRDY:
             dly := core#T_GET_DRDY
         other:                                  ' invalid reg_nr
@@ -316,7 +329,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
     cmd_pkt.byte[2] := reg_nr.byte[0]
     i2c.start{}
     i2c.wrblock_lsbf(@cmd_pkt, 3)
-    i2c.stop
+    i2c.stop{}
     time.usleep(dly)
     i2c.start{}
     i2c.wr_byte(SLAVE_RD)

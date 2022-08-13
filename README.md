@@ -18,6 +18,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 or single-shot (SCD41 only) measurement modes
 * Power down sensor (SCD41 only)
 * Save configuration settings to sensor EEPROM
+* Sensor built-in self-test
 
 ## Requirements
 
@@ -51,3 +52,4 @@ P2/SPIN2:
 
 * Very early in development - may malfunction, or outright fail to build
 * Range of allowed values for ambient pressure compensation isn't verified (not available in datasheet), so it was copied from the SCD30
+
