@@ -82,8 +82,7 @@ PUB alt_comp(alt): curr_alt
 ' Compensate CO2 measurements based on altitude, in meters
 '   Valid values: 0..65535
 '   Any other value polls the chip and returns the current setting
-'   NOTE: The sensor must not be actively measuring for this setting to take effect
-'       Call opmode(STANDBY) first
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
     case alt
         0..65535:
             writereg(core.SET_SENS_ALT, 3, @alt)
@@ -98,6 +97,7 @@ PUB amb_pressure(press): curr_press
 '       0: disable compensation
 '       700..1400 (* range unverified)
 '   Any other value returns the current setting
+'   NOTE: This method may be called while the sensor is actively measuring
     case press
         0, 700..1400:
             writereg(core.SET_AMB_PRESS, 2, @press)
@@ -160,6 +160,7 @@ PUB data_ready(): flag
 
 PUB measure()
 ' Read measurement data
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
 '   NOTE: This only functions with the SCD41
     if (_opmode == STANDBY)
         if (_meas_md)
@@ -192,6 +193,7 @@ PUB opmode(mode): curr_mode
 
 PUB powered(state)
 ' Power on sensor (*SCD41 only)
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
     if (state)
         command(core.WAKE)                      ' power on
     else
@@ -199,6 +201,7 @@ PUB powered(state)
 
 PUB reset()
 ' Reset the device
+    command(core.STOP_MEAS)
     command(core.REINIT)
 
 PUB rhdata(): rh_adc
@@ -215,6 +218,11 @@ PUB rhword2pct(adc_word): rh
 
 PUB save_settings()
 ' Save configuration settings to sensor EEPROM
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
+'   NOTE: The sensor EEPROM's write endurance is >2000 cycles. Calling this method is
+'       recommended only when required and when settings have actually changed.
+'       Calibration (automatic and manual) is automatically stored in a separate sensor EEPROM
+'       with an endurance matched to the sensor's lifetime.
     command(core.PERSIST_SET)
 
 PUB self_test(): status
@@ -222,6 +230,7 @@ PUB self_test(): status
 '   Returns:
 '       0: no malfunction detected
 '       non-zero: malfunction detected
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
 '   NOTE: This method takes approx 10sec to execute
     status := 0
     readreg(core.SELF_TEST, 2, @status)
@@ -229,8 +238,8 @@ PUB self_test(): status
 PUB serial_num(ptr_buff)
 ' Read the 48-bit serial number of the device into ptr_buff
 '   Format: MSW..MW..LSW [47..32][31..16][15..0]
+'   NOTE: opmode() must be set to STANDBY before reading
 '   NOTE: Buffer at ptr_buff must be at least 6 bytes in length
-'   NOTE: Serial number can only be read when no measurements are active
     readreg(core.GET_SN, 6, ptr_buff)
 
 PUB temp_bias(tb): curr_bias
