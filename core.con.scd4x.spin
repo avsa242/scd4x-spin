@@ -44,6 +44,8 @@ CON
     T_GET_DRDY      = 1_000                     ' cmd execution time: data ready
 
     PERSIST_SET     = $3615
+    T_PERSIST_SET   = 800_000                   ' cmd execution time: write persistent settings
+
     GET_SN          = $3682
     SELF_TEST       = $3639
     FACT_RESET      = $3632
