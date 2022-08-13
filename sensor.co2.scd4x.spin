@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 12, 2022
+    Updated Aug 13, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -23,14 +23,14 @@ CON
     DEF_HZ          = 100_000
     I2C_MAX_FREQ    = core#I2C_MAX_FREQ
 
-' Operating modes
+    { Operating modes }
     STANDBY         = 0
     CONT            = 1
     CONT_LP         = 2
 
-' Temperature scales
-    C               = 0
-    F               = 1
+    { measurement mode }
+    ALL             = 0
+    RHT             = 1                         ' any non-zero value
 
 VAR
 
@@ -38,7 +38,7 @@ VAR
     long _temp
     long _rh
     long _presscomp
-    byte _opmode
+    byte _opmode, _meas_md
 
 OBJ
 
@@ -165,23 +165,23 @@ PUB data_ready{}: flag
     readreg(core#GET_DRDY, 2, @flag)
     return ((flag & $7ff) <> 0)                 ' lower 11 bits set? data is ready
 
-PUB rhdata{}: rh_adc
-' Relative humidity data
-'   Returns: RH ADC word
-    if (data_ready{})
-        read_meas{}
-    else
-        return _rh
-
-PUB rhword2pct(adc_word): rh
-' Convert ADC word to relative humidity, in hundredths of a percent
-    return (100 * (adc_word * 100) / core#ADC_MAX)
-
 PUB measure{}
 ' Read measurement data
 '   NOTE: This only functions with the SCD41
     if (_opmode == STANDBY)
-        command(core#MEAS_ONE)
+        if (_meas_md)
+            command(core#MEAS_ONE_RHT)          ' measure RH, temp only
+        else
+            command(core#MEAS_ONE)              ' measure all
+
+PUB meas_mode(mode)
+' Set measurement mode (for one-shot measurements only)
+'   ALL (0): perform all measurements (default)
+'   non-zero: measure RH, temperature only
+    if (mode)
+        _meas_md := 1
+    else
+        _meas_md := 0
 
 PUB opmode(mode): curr_mode
 ' Set operating mode
@@ -207,6 +207,18 @@ PUB powered(state)
 PUB reset{}
 ' Reset the device
     command(core#REINIT)
+
+PUB rhdata{}: rh_adc
+' Relative humidity data
+'   Returns: RH ADC word
+    if (data_ready{})
+        read_meas{}
+    else
+        return _rh
+
+PUB rhword2pct(adc_word): rh
+' Convert ADC word to relative humidity, in hundredths of a percent
+    return (100 * (adc_word * 100) / core#ADC_MAX)
 
 PUB serial_num(ptr_buff)
 ' Read the 48-bit serial number of the device into ptr_buff
