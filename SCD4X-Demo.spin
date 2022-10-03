@@ -6,7 +6,7 @@
         * CO2 data output
     Copyright (c) 2022
     Started Jul 10, 2021
-    Updated Aug 8, 2022
+    Updated Oct 3, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -36,7 +36,7 @@ OBJ
     ser: "com.serial.terminal.ansi"
     time: "time"
 
-PUB Setup{}
+PUB setup{}
 
     ser.start(SER_BAUD)
     time.msleep(10)
@@ -49,10 +49,11 @@ PUB Setup{}
         ser.strln(string("SCD4X driver failed to start - halting"))
         repeat
 
-    env.reset{}
+    env.preset_active{}
+
     env.opmode(env#STANDBY)
-    env.alt_comp(0)                             ' your location's altitude above sea level (m)
-    env.opmode(env#CONT)
+    env.co2_set_alt_comp(0)                     ' your location's altitude above sea level (m)
+
     demo{}
 
 #include "co2demo.common.spinh"                 ' code common to all CO2 demos

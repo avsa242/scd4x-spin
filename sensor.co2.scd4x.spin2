@@ -74,38 +74,46 @@ PUB defaults()
 '   * Erase manual and/or automatic calibration history
     command(core.FACT_RESET)
 
+PUB preset_active{}
+' Use power-on-reset defaults, then transition to continuous measurement
+    reset{}
+    opmode(CONT)
+
 PUB adc2co2(adc_word): co2
 ' Convert ADC word to CO2 concentration, in PPM
     return adc_word * 10
 
-PUB alt_comp(alt): curr_alt
-' Compensate CO2 measurements based on altitude, in meters
-'   Valid values: 0..65535
-'   Any other value polls the chip and returns the current setting
-'   NOTE: opmode() must be set to STANDBY for this setting to take effect
-    case alt
-        0..65535:
-            writereg(core.SET_SENS_ALT, 3, @alt)
-        other:
-            curr_alt := 0
-            readreg(core.GET_SENS_ALT, 3, @curr_alt)
-            return curr_alt
+PUB co2_alt_comp{}: alt
+' Get altitude compensation value
+'   Returns: meters
+    alt := 0
+    readreg(core.GET_SENS_ALT, 3, @alt)
 
-PUB amb_pressure(press): curr_press
+PUB co2_set_alt_comp(alt)
+' Compensate CO2 measurements based on altitude, in meters
+'   Valid values: 0..65535 (clamped to range)
+'   NOTE: opmode() must be set to STANDBY for this setting to take effect
+    alt := 0 #> alt <# 65535
+    writereg(core.SET_SENS_ALT, 3, @alt)
+
+PUB co2_amb_press_comp{}: curr_press
+' Get ambient pressure for use in on-sensor compensation
+'   Returns: millibars
+'   NOTE: Returns value cached in MCU RAM by set_amb_pressure()
+    return _presscomp
+
+PUB co2_set_amb_press_comp(press)
 ' Set ambient pressure, in millibars, for use in on-sensor compensation
 '   Valid values:
 '       0: disable compensation
 '       700..1400 (* range unverified)
-'   Any other value returns the current setting
 '   NOTE: This method may be called while the sensor is actively measuring
-    case press
-        0, 700..1400:
-            writereg(core.SET_AMB_PRESS, 2, @press)
-            _presscomp := press
-        other:
-            return _presscomp
+    if (press)
+        press := 700 #> press <# 1400
+    writereg(core.SET_AMB_PRESS, 2, @press)
+    _presscomp := press
 
-PUB auto_cal(state): curr_state
+PUB auto_cal_ena(state): curr_state
 ' Enable automatic self-calibration
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value polls the chip and returns the current setting
@@ -119,7 +127,7 @@ PUB auto_cal(state): curr_state
             readreg(core.GET_AUTOCAL, 2, @curr_state)
             return (curr_state == 1)
 
-PUB cal_co2(ref_ppm): ppm | crc_rd
+PUB co2_cal(ref_ppm): ppm | crc_rd
 ' Perform manual CO2 sensor calibration, given target CO2 concentration in ppm
 '   NOTE: To successfully perform accurate calibration, follow these steps:
 '       1. Operate the sensor in the end-application's desired opmode() for at least 3 minutes
@@ -146,12 +154,12 @@ PUB cal_co2(ref_ppm): ppm | crc_rd
 PUB co2_data(): f_co2
 ' CO2 data
 '   Returns: CO2 ADC word
-    if (data_ready())
+    if (co2_data_rdy())
         read_meas()
     else
         return _co2
 
-PUB data_ready(): flag
+PUB co2_data_rdy(): flag
 ' Flag indicating measurement data is ready
 '   Returns: TRUE (-1) or FALSE (0)
     flag := 0
@@ -204,15 +212,15 @@ PUB reset()
     command(core.STOP_MEAS)
     command(core.REINIT)
 
-PUB rhdata(): rh_adc
+PUB rh_data(): rh_adc
 ' Relative humidity data
 '   Returns: RH ADC word
-    if (data_ready())
+    if (co2_data_rdy())
         read_meas()
     else
         return _rh
 
-PUB rhword2pct(adc_word): rh
+PUB rh_word2pct(adc_word): rh
 ' Convert ADC word to relative humidity, in hundredths of a percent
     return (100 * (adc_word * 100) / core.ADC_MAX)
 
@@ -257,15 +265,15 @@ PUB temp_bias(tb): curr_bias
             return (175 * (curr_bias * 100)) / core.ADC_MAX
             return
 
-PUB tempdata(): temp_adc
+PUB temp_data(): temp_adc
 ' Temperature data
 '   Returns: temperature ADC word
-    if (data_ready())
+    if (co2_data_rdy())
         read_meas()
     else
         return _temp
 
-PUB tempword2deg(adc_word): temp
+PUB temp_word2deg(adc_word): temp
 ' Convert ADC word to temperature, in hundredths of a degree in chosen scale
    case _temp_scale
         C:
@@ -314,7 +322,7 @@ PRI read_meas() | tmp[2]
     _temp := (tmp.word[1] signx 15)
     _rh := tmp.word[2]
 
-PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr, last_wd, dly
+PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr, last_wd, dly
 ' Read nr_bytes from the device into ptr_buff
     case reg_nr                                 ' validate register num
         core.GET_SN, core.READ_MEAS, core.GET_SENS_ALT, core.GET_TEMP_OFFS, core.GET_AUTOCAL:
@@ -344,7 +352,7 @@ PRI readReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
             word[ptr_buff][wd_nr] := rdw
     i2c.stop()
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
+PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
         core.SET_SENS_ALT, core.SET_TEMP_OFFS, core.SET_AUTOCAL, core.SET_AMB_PRESS:
