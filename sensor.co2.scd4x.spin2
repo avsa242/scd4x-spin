@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor (P2 version)
     Copyright (c) 2022
     Started Aug 6, 2022
-    Updated Aug 13, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -148,7 +148,7 @@ PUB co2_cal(ref_ppm): ppm | crc_rd
     ppm := (i2c.rdword_msbf(i2c.ACK)-$8000)
     crc_rd := i2c.rd_byte(i2c.NAK)
     i2c.stop()
-    if (crc_rd == crc.sensirioncrc8(@ppm, 2))
+    if (crc_rd == crc.sensirion_crc8(@ppm, 2))
         return ppm
 
 PUB co2_data(): f_co2
@@ -347,7 +347,7 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, crc_rd, crc_calc, rdw, wd_nr,
     repeat wd_nr from 0 to last_wd
         rdw := i2c.rdword_msbf(i2c.ACK)
         crc_rd := i2c.rd_byte(wd_nr == last_wd) ' NAK if this is the last word to be read
-        crc_calc := crc.sensirioncrc8(@rdw, 2)
+        crc_calc := crc.sensirion_crc8(@rdw, 2)
         if (crc_rd == crc_calc)                 ' copy data to caller if CRC is good
             word[ptr_buff][wd_nr] := rdw
     i2c.stop()
@@ -370,7 +370,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     tmp.byte[1] := byte[ptr_buff][1]
     tmp.byte[0] := byte[ptr_buff][0]
-    crc_calc := crc.sensirioncrc8(@tmp, 2)
+    crc_calc := crc.sensirion_crc8(@tmp, 2)
     i2c.wrword_msbf(tmp)
     i2c.wr_byte(crc_calc)
     i2c.stop()

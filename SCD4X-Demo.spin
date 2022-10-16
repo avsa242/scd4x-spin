@@ -6,7 +6,7 @@
         * CO2 data output
     Copyright (c) 2022
     Started Jul 10, 2021
-    Updated Oct 3, 2022
+    Updated Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -31,7 +31,7 @@ CON
 
 OBJ
 
-    cfg: "core.con.boardcfg.flip"
+    cfg: "boardcfg.flip"
     env: "sensor.co2.scd4x"
     ser: "com.serial.terminal.ansi"
     time: "time"
