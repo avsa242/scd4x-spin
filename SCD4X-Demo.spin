@@ -6,7 +6,7 @@
         * CO2 data output
     Copyright (c) 2022
     Started Jul 10, 2021
-    Updated Oct 16, 2022
+    Updated Nov 27, 2022
     See end of file for terms of use.
     --------------------------------------------
 
@@ -39,7 +39,7 @@ OBJ
 PUB setup{}
 
     ser.start(SER_BAUD)
-    time.msleep(10)
+    time.msleep(20)
     ser.clear{}
     ser.strln(string("Serial terminal started"))
 
@@ -51,7 +51,6 @@ PUB setup{}
 
     env.preset_active{}
 
-    env.opmode(env#STANDBY)
     env.co2_set_alt_comp(0)                     ' your location's altitude above sea level (m)
 
     demo{}
