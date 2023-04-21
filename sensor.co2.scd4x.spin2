@@ -3,9 +3,9 @@
     Filename: sensor.co2.scd4x.spin2
     Author: Jesse Burt
     Description: Driver for the scd4x CO2 sensor (P2 version)
-    Copyright (c) 2022
+    Copyright (c) 2023
     Started Aug 6, 2022
-    Updated Oct 16, 2022
+    Updated Apr 21, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -153,10 +153,9 @@ PUB co2_cal(ref_ppm): ppm | crc_rd
 PUB co2_data(): f_co2
 ' CO2 data
 '   Returns: CO2 ADC word
-    if (co2_data_rdy())
+    if ( co2_data_rdy() )
         read_meas()
-    else
-        return _co2
+    return _co2
 
 PUB co2_data_rdy(): flag
 ' Flag indicating measurement data is ready
@@ -214,10 +213,9 @@ PUB reset()
 PUB rh_data(): rh_adc
 ' Relative humidity data
 '   Returns: RH ADC word
-    if (co2_data_rdy())
+    if ( co2_data_rdy() )
         read_meas()
-    else
-        return _rh
+    return _rh
 
 PUB rh_word2pct(adc_word): rh
 ' Convert ADC word to relative humidity, in hundredths of a percent
@@ -267,10 +265,9 @@ PUB temp_bias(tb): curr_bias
 PUB temp_data(): temp_adc
 ' Temperature data
 '   Returns: temperature ADC word
-    if (co2_data_rdy())
+    if ( co2_data_rdy() )
         read_meas()
-    else
-        return _temp
+    return _temp
 
 PUB temp_word2deg(adc_word): temp
 ' Convert ADC word to temperature, in hundredths of a degree in chosen scale
@@ -377,7 +374,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt, tmp, crc_calc, dly
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2023 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
