@@ -4,9 +4,9 @@
     Author: Jesse Burt
     Description: SCD4X driver demo
         * CO2 data output
-    Copyright (c) 2022
-    Started Jul 10, 2021
-    Updated Nov 27, 2022
+    Copyright (c) 2023
+    Started Aug 6, 2022
+    Updated Jul 15, 2023
     See end of file for terms of use.
     --------------------------------------------
 
@@ -21,18 +21,12 @@ CON
 
 ' -- User-modifiable constants
     SER_BAUD    = 115_200
-
-    { I2C configuration }
-    SCL_PIN     = 28
-    SDA_PIN     = 29
-    I2C_FREQ    = 100_000                       ' max is 100_000
-
 ' --
 
 OBJ
 
     cfg: "boardcfg.flip"
-    env: "sensor.co2.scd4x"
+    env: "sensor.co2.scd4x" | SCL=28, SDA=29, I2C_FREQ=400_000
     ser: "com.serial.terminal.ansi"
     time: "time"
 
@@ -43,7 +37,7 @@ PUB setup{}
     ser.clear{}
     ser.strln(string("Serial terminal started"))
 
-    if (env.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
+    if ( env.start() )
         ser.strln(string("SCD4X driver started"))
     else
         ser.strln(string("SCD4X driver failed to start - halting"))
@@ -59,7 +53,7 @@ PUB setup{}
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2023 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

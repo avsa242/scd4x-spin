@@ -5,7 +5,7 @@
     Description: Driver for the scd4x CO2 sensor
     Copyright (c) 2023
     Started Aug 6, 2022
-    Updated Apr 21, 2023
+    Updated Jul 15, 2023
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -15,22 +15,29 @@
 
 CON
 
-    SLAVE_WR        = core#SLAVE_ADDR
-    SLAVE_RD        = core#SLAVE_ADDR|1
+    SLAVE_WR    = core#SLAVE_ADDR
+    SLAVE_RD    = core#SLAVE_ADDR|1
 
-    DEF_SCL         = 28
-    DEF_SDA         = 29
-    DEF_HZ          = 100_000
-    I2C_MAX_FREQ    = core#I2C_MAX_FREQ
+    DEF_SCL     = 28
+    DEF_SDA     = 29
+    DEF_HZ      = 100_000
+    DEF_ADDR    = 0
+    I2C_MAX_FREQ= core#I2C_MAX_FREQ
 
     { Operating modes }
-    STANDBY         = 0
-    CONT            = 1
-    CONT_LP         = 2
+    STANDBY     = 0
+    CONT        = 1
+    CONT_LP     = 2
 
     { measurement mode }
-    ALL             = 0
-    RHT             = 1                         ' any non-zero value
+    ALL         = 0
+    RHT         = 1                         ' any non-zero value
+
+    { default I/O settings; these can be overridden in the parent object }
+    SCL         = DEF_SCL
+    SDA         = DEF_SDA
+    I2C_FREQ    = DEF_HZ
+    I2C_ADDR    = DEF_ADDR
 
 VAR
 
@@ -56,13 +63,13 @@ PUB null{}
 ' This is not a top-level object
 
 PUB start{}: status
-' Start using "standard" Propeller I2C pins and 100kHz
-    return startx(DEF_SCL, DEF_SDA, DEF_HZ)
+' Start using default I/O settings
+    return startx(SCL, SDA, I2C_FREQ)
 
 PUB startx(SCL_PIN, SDA_PIN, I2C_HZ): status
 ' Start using custom IO pins and I2C bus frequency
-    if (lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and I2C_HZ =< core#I2C_MAX_FREQ)
-        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+    if ( lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) )
+        if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             time.usleep(core#T_POR)             ' wait for device startup
             return
     ' if this point is reached, something above failed
