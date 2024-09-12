@@ -5,6 +5,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the Sensiri
 
 **IMPORTANT**: This software is meant to be used with the [spin-standard-library](https://github.com/avsa242/spin-standard-library) (P8X32A) or [p2-spin-standard-library](https://github.com/avsa242/p2-spin-standard-library) (P2X8C4M64P). Please install the applicable library first before attempting to use this code, otherwise you will be missing several files required to build the project.
 
+
 ## Salient Features
 
 * SCD-40, SCD-41 supported
@@ -25,7 +26,7 @@ or single-shot (SCD41 only) measurement modes
 
 P1/SPIN1:
 * spin-standard-library
-* 1 extra core/cog for the PASM I2C engine (none if the SPIN I2C engine is used)
+* 1 extra core/cog for the PASM I2C engine (none if the bytecode-based I2C engine is used)
 * sensor.temp.common.spinh (source: spin-standard-library)
 * sensor.rh.common.spinh (source: spin-standard-library)
 * sensor.co2.common.spinh (source: spin-standard-library)
@@ -41,10 +42,10 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1        | SPIN1    | FlexSpin (6.2.1)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (6.2.1)       | Native/PASM  | OK                    |
-| P2        | SPIN2    | FlexSpin (6.2.1)       | NuCode       | FTBFS                 |
-| P2        | SPIN2    | FlexSpin (6.2.1)       | Native/PASM2 | OK                    |
+| P1        | SPIN1    | FlexSpin (6.9.4)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (6.9.4)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (6.9.4)       | NuCode       | Untested              |
+| P2        | SPIN2    | FlexSpin (6.9.4)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
 
@@ -57,6 +58,5 @@ P2/SPIN2:
 
 ## Limitations
 
-* Very early in development - may malfunction, or outright fail to build
 * Range of allowed values for ambient pressure compensation isn't verified (not available in datasheet), so it was copied from the SCD30
 

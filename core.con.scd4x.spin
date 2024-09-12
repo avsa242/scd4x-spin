@@ -1,13 +1,12 @@
 {
-    --------------------------------------------
-    Filename: core.con.scd4x.spin
-    Author: Jesse Burt
-    Description: SCD4x-specific constants
-    Copyright (c) 2022
-    Started Aug 6, 2022
-    Updated Aug 12, 2022
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       core.con.scd4x.spin
+    Description:    SCD4x-specific constants
+    Author:         Jesse Burt
+    Started:        Aug 6, 2022
+    Updated:        Sep 12, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
 CON
@@ -15,6 +14,7 @@ CON
 ' I2C Configuration
     I2C_MAX_FREQ    = 100_000                   ' device max I2C bus freq
     SLAVE_ADDR      = $62 << 1                  ' 7-bit format slave address
+
     T_POR           = 1_000_000                 ' startup time (usecs)
     T_RES           = 1_000_000                 ' reset time
     T_CMD           = 1_000                     ' cmd execution time: most commands
@@ -77,12 +77,14 @@ CON
     WAKE            = $36F6
     T_WAKE          = 20_000                    ' cmd execution time: wake up
 
-PUB null{}
+
+PUB null()
 ' This is not a top-level object
+
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

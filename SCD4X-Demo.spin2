@@ -1,36 +1,43 @@
 {
-    --------------------------------------------
-    Filename: SCD4X-Demo.spin2
-    Author: Jesse Burt
-    Description: SCD4X driver demo (P2 version)
+----------------------------------------------------------------------------------------------------
+    Filename:       SCD4X-Demo.spin
+    Description:    SCD4X driver demo
         * CO2 data output
-    Copyright (c) 2023
-    Started Aug 7, 2022
-    Updated Jul 15, 2023
-    See end of file for terms of use.
-    --------------------------------------------
-
-    Build-time symbols supported by driver:
-        N/A
+    Author:         Jesse Burt
+    Started:        Aug 7, 2022
+    Updated:        Sep 12, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 CON
 
-    _clkfreq    = cfg._clkfreq_def
-    _xtlfreq    = cfg._xtlfreq
+    _clkfreq    = 180_000_000
+    _xtlfreq    = 20_000_000
 
-' -- User-modifiable constants
-    SER_BAUD    = 2_000_000
-' --
 
 OBJ
 
-    cfg: "boardcfg.p2eval"
-    env: "sensor.co2.scd4x" | SCL=28, SDA=29, I2C_FREQ=400_000
-    ser: "com.serial.terminal.ansi"
+    env: "sensor.co2.scd4x" | SCL=0, SDA=1, I2C_FREQ=400_000
+    ser: "com.serial.terminal.ansi" | SER_BAUD=2_000_000
+
+
+PUB main() | co2
+
+    setup()
+    env.co2_set_alt_comp(0)                     ' your location's altitude above sea level (m)
+
+    repeat
+        env.measure()                           ' SCD41 only (ignored on SCD40)
+        co2 := env.co2ppm()
+        ser.pos_xy(0, 3)
+        ser.printf(@"CO2 (ppm): %5.5d.%0d\n\r", (co2 / 10), (co2 // 10))
+
 
 PUB setup()
 
-    ser.start(SER_BAUD)
+    ser.start()
+
     ser.clear()
     ser.strln(@"Serial terminal started")
 
@@ -42,15 +49,10 @@ PUB setup()
 
     env.preset_active()
 
-    env.co2_set_alt_comp(0)                     ' your location's altitude above sea level (m)
-
-    demo()
-
-#include "co2demo.common.spin2h"                ' code common to all IMU demos
 
 DAT
 {
-Copyright 2023 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
